@@ -29,32 +29,28 @@ if ($_POST["password"] !== $_POST["password_confirmation"]) {
 
 $password_hash = password_hash($_POST["password"], PASSWORD_DEFAULT);
 
-$mysqli = require __DIR__ . "/connection.php";
+$conn = require __DIR__ . "/connection.php";
 
-$sql = "INSERT INTO lawyer(fullname, email, phonenumber, hash_password)
-        VALUES (?, ?, ?, ?)";
-   
-$stmt = $mysqli->stmt_init();
+// Get form inputs
+$fullname = $_POST['fname'];
+$email = $_POST['email'];
+$phonenumber = $_POST['phonenumber'];
+$password = $password_hash;
 
-if ( ! $stmt->prepare($sql)) {
-    die("SQL error: " . $mysqli->error);
+$conn = new mysqli($database_host,  $database_user, $database_password, $database_name);
+// Check connection
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
 }
-$stmt->bind_param("ssss",
-                  $_POST["fullname"],
-                  $_POST["email"],
-                  $_POST["phonenumber"],
-                  $password_hash);
-                  
-if ($stmt->execute()) {
 
-    header("Location: index.html");
-    exit;
-    
+$sql = "INSERT INTO lawyer (fullname, email, phonenumber, hash_password)
+VALUES ('$fullname','$phonenumber', '$email',  '$password')";
+
+if ($conn->query($sql) === TRUE) {
+  echo "New record created successfully";
 } else {
-    
-    if ($mysqli->errno === 1062) {
-        die("email already taken");
-    } else {
-        die($mysqli->error . " " . $mysqli->errno);
-    }
+  echo "Error: " . $sql . "<br>" . $conn->error;
 }
+
+$conn->close();
+?>
